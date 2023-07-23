@@ -6,22 +6,26 @@ const configuration = new Configuration({
 });
 
 const openai = new OpenAIApi(configuration);
+var historyChat = [{"role": "system", "content": "You are a helpful assistant."}]
 
 async function getChatCompletion(prompt) {
+    history.push({"role": "user", "content": prompt});
+
     try {
         const completion = await openai.createChatCompletion({
           model: "gpt-4",
-          messages: [
-            {"role": "system", "content": "You are a helpful assistant."}, 
-            {"role": "user", "content": "Hello world"}
-            ],
+          messages: history
         });
 
-        return completion.data.choices[0].message;
+        const completion = completion.data.choices[0].message;
+
+        history.push({"role": "assistant", "content": completion});
+
+        return completion;
     } catch (error) {
         console.error("Erro ao chamar a API do OpenAI");
         throw error;
     }
 }
 
-module.exports = getOpenAICompletion;
+module.exports = getChatCompletion;

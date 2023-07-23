@@ -28,7 +28,7 @@ app.get("/redis/users", async (req, res) => {
 app.post("/pinecone/include/vectors", async (req, res) => {
     try {
         await includeVectors(req.body);
-        
+
         return res.status(201).json({ "message": "Save" });
     } catch (error) {
         return res.status(500).json({ "error": "Internal Server Error" });
