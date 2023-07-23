@@ -120,7 +120,7 @@ app.delete("/pinecone/delete/:namespace", async (req, res) => {
     return res.status(200).json({"message": "Delete success"});
 });
 
-app.post("/openai/prompt", async (req, res) => {
+app.post("/openai/chat", async (req, res) => {
     const { prompt } = req.body;
     try {
         const completion = await getOpenAICompletion(prompt);

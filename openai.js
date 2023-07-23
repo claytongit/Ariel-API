@@ -1,24 +1,23 @@
-const axios = require("axios");
+const { Configuration, OpenAIApi } = require("openai");
 
-async function getOpenAICompletion(prompt) {
-    const apiKey = process.env.OPENAI_API_KEY;
+const configuration = new Configuration({
+  apiKey: process.env.OPENAI_API_KEY,
+  organization: process.env.OPENAI_API_KEY
+});
 
+const openai = new OpenAIApi(configuration);
+
+async function getChatCompletion(prompt) {
     try {
-        const response = await axios.post(
-        "https://api.openai.com/v1/engines/davinci-codex/completions",
-        {
-            prompt,
-            max_tokens: 150,
-        },
-        {
-            headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${ apiKey }`,
-            },
-        }
-        );
+        const completion = await openai.createChatCompletion({
+          model: "gpt-4",
+          messages: [
+            {"role": "system", "content": "You are a helpful assistant."}, 
+            {"role": "user", "content": "Hello world"}
+            ],
+        });
 
-        return response.data.choices[0].text;
+        return completion.data.choices[0].message;
     } catch (error) {
         console.error("Erro ao chamar a API do OpenAI");
         throw error;
