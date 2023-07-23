@@ -3,7 +3,7 @@ const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const client = require("./redis");
 const pinecone = require("./pinecone");
-const getOpenAICompletion = require("./openai");
+const getChatCompletion = require("./openai");
 const axios = require("axios");
 
 dotenv.config();
@@ -123,7 +123,7 @@ app.delete("/pinecone/delete/:namespace", async (req, res) => {
 app.post("/openai/chat", async (req, res) => {
     const { prompt } = req.body;
     try {
-        const completion = await getOpenAICompletion(prompt);
+        const completion = await getChatCompletion(prompt);
         return res.status(200).json({ completion });
     } catch (error) {
         console.error("Erro ao chamar a API do OpenAI");
