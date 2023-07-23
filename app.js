@@ -2,9 +2,8 @@ const express = require("express");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
 const client = require("./redis");
-const pinecone = require("./pinecone");
 const getChatCompletion = require("./openai");
-const axios = require("axios");
+const { includeVectors, listVectors, include, list, deleteNamespace } = require("./pinecone");
 
 dotenv.config();
 
@@ -28,27 +27,8 @@ app.get("/redis/users", async (req, res) => {
 
 app.post("/pinecone/include/vectors", async (req, res) => {
     try {
-        const { text, id, metaValue, name } = req.body;
-
-        const response = await axios.post('https://tfhub.dev/google/universal-sentence-encoder/4?tfjs-format=tfjs', {
-            sentences: [text]
-        });
-
-        const vectors = response.data;
-
-        const index = pinecone.Index("arielapp");
-        const upsertRequest = {
-            vectors: [{
-                id: id,
-                values: vectors,
-                metadata: {
-                    genre: metaValue
-                }
-            }],
-            namespace: name,
-        };
-        await index.upsert(upsertRequest);
-
+        await includeVectors(req.body);
+        
         return res.status(201).json({ "message": "Save" });
     } catch (error) {
         return res.status(500).json({ "error": "Internal Server Error" });
@@ -56,74 +36,50 @@ app.post("/pinecone/include/vectors", async (req, res) => {
 });
 
 app.post("/pinecone/list/vectors", async (req, res) => {
-    const { values, metaValue, name } = req.body;
+    try {
+        const queryResponse = await listVectors(req.body);
 
-    const index = pinecone.Index("arielapp");
-    const queryRequest = {
-        vector: values,
-        topK: 10,
-        includeValues: true,
-        includeMetadata: true,
-        filter: {
-            genre: { $in: [metaValue] },
-        },
-        namespace: name,
-    };
-    const queryResponse = await index.query({ queryRequest });
-
-    return res.status(200).json({queryResponse});
+        return res.status(200).json({queryResponse});
+    } catch (error) {
+        return res.status(500).json({ "error": "Internal Server Error" });
+    }
 });
 
 app.post("/pinecone/include", async (req, res) => {
-    const { vetores, namespace, metadata } = req.body;
+    try {
+        await include(req.body);
 
-    const index = pinecone.Index("arielapp");
-
-    await index.upsert({ 
-        upsertRequest: { 
-            vectors: [
-                { id: '1', values: vetores }
-            ],
-            metadata: [
-                { "exemplo": metadata }
-            ], 
-            namespace: namespace
-        }
-    });
-
-    return res.status(200).json({"message": "Save data"});
+        return res.status(200).json({"message": "Save data"});
+    } catch (error) {
+        return res.status(500).json({ "error": "Internal Server Error" });
+    }
 });
 
 app.post("/pinecone/list", async (req, res) => {
-    const { ids, namespace } = req.body;
+    try {
+        const fetchResult = await list(req.body);
 
-    const index = pinecone.Index("arielapp");
-
-    const fetchResult = await index.fetch({
-        ids,
-        namespace
-    });
-
-    return res.status(200).json({fetchResult});
+        return res.status(200).json({fetchResult});
+    } catch (error) {
+        return res.status(500).json({ "error": "Internal Server Error" });
+    }
 });
 
 app.delete("/pinecone/delete/:namespace", async (req, res) => {
-    const { namespace } = req.params;
+    try {
+        await deleteNamespace(req.params.namespace);
 
-    const index = pinecone.Index("arielapp");
-
-    await index.delete1({
-        deleteAll: true,
-        namespace: namespace
-    });
-
-    return res.status(200).json({"message": "Delete success"});
+        return res.status(200).json({"message": "Delete success"});
+    } catch (error) {
+        return res.status(500).json({ "error": "Internal Server Error" });
+    }
 });
 
-app.post("/openai/chat", async (req, res) => {
+app.post("/openai/prompt", async (req, res) => {
     const { prompt } = req.body;
     try {
         const completion = await getChatCompletion(prompt);
+
         return res.status(200).json({ completion });
     } catch (error) {
         console.error("Erro ao chamar a API do OpenAI");
