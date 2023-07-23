@@ -96,6 +96,55 @@ app.post("/pinecone/list/vectors", async (req, res) => {
     return res.status(200).json({queryResponse});
 });
 
+// Método POST (Pinecone) salvar vetores
+app.post("/pinecone/include", async (req, res) => {
+    const { vetores, namespace, metadata } = req.body;
+
+    const index = pinecone.Index("arielapp");
+
+    await index.upsert({ 
+        upsertRequest: { 
+            vectors: [
+                { id: '1', values: vetores }
+            ],
+            metadata: [
+                { "exemplo": metadata }
+            ], 
+            namespace: namespace
+        }
+    });
+
+    return res.status(200).json({"message": "Save data"});
+});
+
+// Método POST (Pinecone) pegar vetores
+app.post("/pinecone/list", async (req, res) => {
+    const { ids, namespace } = req.body;
+
+    const index = pinecone.Index("arielapp");
+
+    const fetchResult = await index.fetch({
+        ids,
+        namespace
+    });
+
+    return res.status(200).json({fetchResult});
+});
+
+// Método DELETE (Pinecone) deletar namespace
+app.delete("/pinecone/delete/:namespace", async (req, res) => {
+    const { namespace } = req.params;
+
+    const index = pinecone.Index("arielapp");
+
+    await index.delete1({
+        deleteAll: true,
+        namespace: namespace
+    });
+
+    return res.status(200).json({"message": "Delete success"});
+});
+
 // Método POST (OpenAI)
 app.post("/openai/prompt", async (req, res) => {
     const { prompt } = req.body;
