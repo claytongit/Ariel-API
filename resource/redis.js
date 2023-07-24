@@ -1,11 +1,15 @@
 const redis = require("redis");
 
-const client = redis.createClient({
-    url: process.env.REDIS_URL,
-});
+try {
+    const client = redis.createClient({
+        url: process.env.REDIS_URL,
+    });
 
-client.on("connect", () => {
-    console.log("Conexão com o Redis estabelecida com sucesso!");
-});
+    client.on("connect", () => {
+        console.log("Conexão com o Redis estabelecida com sucesso!");
+    });
+} catch (error) {
+    console.log("Erro ao estabelecer conexão com o Redis");
+}
 
 module.exports = client;

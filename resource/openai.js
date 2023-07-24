@@ -18,7 +18,6 @@ async function getChatCompletion(prompt) {
         });
 
         const answer = completion.choices[0].message.content;
-
         currentTokenSize = completion.usage.total_tokens;
 
         history.push({"role": "user", "content": prompt});
@@ -26,7 +25,7 @@ async function getChatCompletion(prompt) {
 
         return completion;
     } catch (error) {
-        console.error("Erro ao chamar a API do OpenAI");
+        console.error("Erro ao chamar a API da OpenAI");
         throw error;
     }
 }

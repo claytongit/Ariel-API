@@ -1,13 +1,19 @@
-const express = require("express");
-const dotenv = require("dotenv");
-const bodyParser = require("body-parser");
-const client = require("./resource/redis");
+const express           = require("express");
+const dotenv            = require("dotenv");
+const bodyParser        = require("body-parser");
+const client            = require("./resource/redis");
 const getChatCompletion = require("./resource/openai");
-const { includeVectors, listVectors, include, list, deleteNamespace } = require("./resource/pinecone");
+const { 
+    includeVectors, 
+    listVectors, 
+    include, 
+    list, 
+    deleteNamespace }   = require("./resource/pinecone");
 
 dotenv.config();
 
 const app = express();
+
 app.use(express.json());
 app.use(bodyParser.json());
 
@@ -84,7 +90,6 @@ app.post("/openai/prompt", async (req, res) => {
 
         return res.status(200).json({ completion });
     } catch (error) {
-        console.error("Erro ao chamar a API do OpenAI");
         return res.status(500).json({ error: "Erro ao chamar a API do OpenAI" });
     }
 });
