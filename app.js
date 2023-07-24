@@ -1,9 +1,9 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const bodyParser = require("body-parser");
-const client = require("./redis");
-const getChatCompletion = require("./openai");
-const { includeVectors, listVectors, include, list, deleteNamespace } = require("./pinecone");
+const client = require("./resource/redis");
+const getChatCompletion = require("./resource/openai");
+const { includeVectors, listVectors, include, list, deleteNamespace } = require("./resource/pinecone");
 
 dotenv.config();
 
@@ -79,6 +79,8 @@ app.post("/openai/prompt", async (req, res) => {
     const { prompt } = req.body;
     try {
         const completion = await getChatCompletion(prompt);
+
+        historySizeCheck();
 
         return res.status(200).json({ completion });
     } catch (error) {
