@@ -8,10 +8,12 @@ pinecone.init({
 	apiKey:      process.env.PINECONE_API_KEY
 });
 
+const index = await pinecone.Index("arielapp");
+
 async function includeVectors(reqBody) {
     const { text, id, metaValue, name } = reqBody;
 
-    const index = pinecone.Index("arielapp");
+    // const index = pinecone.Index("arielapp");
 
     const response = await axios.post('https://tfhub.dev/google/universal-sentence-encoder/4?tfjs-format=tfjs', {
         sentences: [text]
@@ -35,7 +37,7 @@ async function includeVectors(reqBody) {
 async function listVectors(reqBody) {
     const { values, metaValue, name } = reqBody;
 
-    const index = pinecone.Index("arielapp");
+    // const index = pinecone.Index("arielapp");
 
     const queryRequest = {
         vector: values,
@@ -54,7 +56,7 @@ async function listVectors(reqBody) {
 async function include(reqBody) {
     const { vetores, namespace, metadata } = reqBody;
 
-    const index = pinecone.Index("arielapp");
+    // const index = pinecone.Index("arielapp");
 
     return await index.upsert({ 
         upsertRequest: { 
@@ -72,7 +74,7 @@ async function include(reqBody) {
 async function list(reqBody) {
     const { ids, namespace } = reqBody;
 
-    const index = pinecone.Index("arielapp");
+    // const index = pinecone.Index("arielapp");
 
     return await index.fetch({
         ids,
@@ -81,7 +83,7 @@ async function list(reqBody) {
 }
 
 async function deleteNamespace(namespace) {
-    const index = pinecone.Index("arielapp");
+    // const index = pinecone.Index("arielapp");
     
     return await index.delete1({
         deleteAll: true,

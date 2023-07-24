@@ -6,12 +6,20 @@ const configuration = new Configuration({
     organization: process.env.OPENAI_API_KEY
 });
 
-var currentTokenSize = 0;
-var historyChat = [{"role": "system", "content": "You are a helpful assistant."}];
 const openai = new OpenAIApi(configuration);
+
+var currentTokenSize = 0;
+var historyChat = [
+    {
+        "role": "system", 
+        "content": "You are a Brazilian salesman working with telesales in a retail store, selling products to a client via Whatsapp. The client just asked you a question and you need to answer it in portuguese. You have to answer as naturally as possible. If you need to refer to the product, use the product's name inside the information provided. You must answer the question using the information below. Both the question and the information are in portuguese and separated with single quotes.\n\nInformation: "
+    }
+];
 
 async function getChatCompletion(prompt) {
     try {
+        history.push({"role": "user", "content": prompt});
+        
         const completion = await openai.createChatCompletion({
             model: "gpt-4",
             messages: history
@@ -20,10 +28,9 @@ async function getChatCompletion(prompt) {
         const answer = completion.choices[0].message.content;
         currentTokenSize = completion.usage.total_tokens;
 
-        history.push({"role": "user", "content": prompt});
         history.push({"role": "assistant", "content": answer});
 
-        return completion;
+        return answer;
     } catch (error) {
         console.error("Erro ao chamar a API da OpenAI");
         throw error;

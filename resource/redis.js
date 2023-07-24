@@ -10,6 +10,7 @@ try {
     });
 } catch (error) {
     console.log("Erro ao estabelecer conexão com o Redis");
+    throw error;
 }
 
 module.exports = client;
