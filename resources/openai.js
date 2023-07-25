@@ -1,8 +1,11 @@
 const { Configuration, OpenAIApi } = require("openai");
+const dotenv                       = require("../node_modules/dotenv");
+
+dotenv.config();
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
-    organization: process.env.OPENAI_API_KEY
+    organization: process.env.YOUR_ORG_ID
 });
 
 const openai = new OpenAIApi(configuration);
@@ -55,7 +58,7 @@ async function textToVector(text) {
         input: text
     })
 
-    return embedding.data.data[0].embedding
+    return resp.data.data[0].embedding;
 }
 
-module.exports = { getChatCompletion, checkTokenLimit };
+module.exports = { getChatCompletion, textToVector };
