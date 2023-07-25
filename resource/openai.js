@@ -1,5 +1,4 @@
 const { Configuration, OpenAIApi } = require("openai");
-// const {  } = require("./pinecone");
 
 const configuration = new Configuration({
     apiKey: process.env.OPENAI_API_KEY,
@@ -19,7 +18,7 @@ var historyChat = [
 async function getChatCompletion(prompt) {
     try {
         history.push({"role": "user", "content": prompt});
-        
+
         const completion = await openai.createChatCompletion({
             model: "gpt-4",
             messages: history
@@ -36,18 +35,27 @@ async function getChatCompletion(prompt) {
         throw error;
     }
 }
-
-function historySizeCheck() {
+/*
+function checkHistorySize() {
     if (currentTokenSize >= 8092) {
         let content = "";
 
         for (var i = 1; i < historyArray.length; i++) {
-            content += historyArray[i] + "\n";
+            content += historyArray[i].content + "\n";
         }
         // Transforma o conteúdo do array de JSON em vetores
         // e envia os vetores para o Pinecone
         historyChat = [historyChat[0]];
     }
+}
+*/
+async function textToVector(text) {
+    const resp = await openai.createEmbedding({
+        model: 'text-embedding-ada-002',
+        input: text
+    })
+
+    return embedding.data.data[0].embedding
 }
 
 module.exports = { getChatCompletion, checkTokenLimit };
