@@ -5,4 +5,4 @@ Microservice API Ariel
 
 1° execute o comando "npm i"
 
-2° Execute o comando "node server.js"
+2° Execute o comando "node app.js"
