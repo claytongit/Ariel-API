@@ -1,24 +1,29 @@
 const { PineconeClient } = require("@pinecone-database/pinecone");
+const dotenv             = require("../node_modules/dotenv");
+
+dotenv.config();
 
 const pinecone = new PineconeClient();
 
 pinecone.init({      
 	environment: "asia-southeast1-gcp-free",      
-	apiKey:      process.env.PINECONE_API_KEY
+	apiKey: process.env.PINECONE_API_KEY
 });
 
 async function include(id, vector, namespace, metadata) {
     const index = await pinecone.Index("arielapp");
 
-    await index.upsert({
-        vectors: [
-            {
-                id: id,
-                values: vector,
-                metadata: { content: metadata },
-            }
-        ],
-        namespace: namespace
+    const upsert_response = await index.upsert({
+        upsertRequest: {
+            vectors: [
+                {
+                    id: id,
+                    values: vector,
+                    metadata: { content: metadata },
+                }
+            ],
+            namespace: namespace
+        }
     });
 }
 
