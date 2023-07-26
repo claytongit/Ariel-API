@@ -9,34 +9,40 @@ const configuration = new Configuration({
 });
 
 const openai = new OpenAIApi(configuration);
+const masterPrompt = "You are a Brazilian salesman working with telesales selling products to people via Whatsapp. You are having a conversation with a person and this person just asked you a question. You need to answer the question in portuguese and naturally. You must answer the question using the information below and the conversation history. The information is in portuguese and in between 3 single quotes.\n\nInformation: ";
 
 var currentTokenSize = 0;
 var historyChat = [
     {
         "role": "system", 
-        "content": "You are a Brazilian salesman working with telesales in a retail store, selling products to a client via Whatsapp. The client just asked you a question and you need to answer it in portuguese. You have to answer as naturally as possible. If you need to refer to the product, use the product's name inside the information provided. You must answer the question using the information below. Both the question and the information are in portuguese and separated with single quotes.\n\nInformation: "
+        "content": masterPrompt
     }
 ];
 
-async function getChatCompletion(prompt) {
+async function getChatCompletion(question, technicalInfo) {
     try {
-        history.push({"role": "user", "content": prompt});
+        historyChat.push({"role": "user", "content": question});
+        historyChat[0].content += technicalInfo;
 
         const completion = await openai.createChatCompletion({
-            model: "gpt-4",
-            messages: history
+            model: "gpt-3.5-turbo-16k",
+            messages: historyChat
         });
+        
+        const answer = completion.data.choices[0].message;
+        currentTokenSize = completion.data.usage.total_tokens;
 
-        const answer = completion.choices[0].message.content;
-        currentTokenSize = completion.usage.total_tokens;
-
-        history.push({"role": "assistant", "content": answer});
-
+        historyChat.push(answer);
+        historyChat[0].content = masterPrompt;
+        
         return answer;
     } catch (error) {
-        console.error("Erro ao chamar a API da OpenAI");
         throw error;
     }
+}
+
+function getHistoryChat() {
+    return historyChat;
 }
 /*
 function checkHistorySize() {
@@ -61,4 +67,4 @@ async function textToVector(text) {
     return resp.data.data[0].embedding;
 }
 
-module.exports = { getChatCompletion, textToVector };
+module.exports = { getChatCompletion, textToVector, getHistoryChat };
