@@ -1,6 +1,22 @@
 const fs = require('fs');
-const textToVector = require("./openai").textToVector;
-const { include, deleteNamespace } = require("./pinecone");
+const { getChatCompletion, textToVector, getHistoryChat } = require("./openai");
+const { include, deleteNamespace, searchBySimilarity } = require("./pinecone");
+
+async function askGPT(question) {
+    try {
+        const technicalInfo = await searchBySimilarity(await textToVector(question));
+        
+        return await getChatCompletion(question, technicalInfo);
+    } catch (error) {
+        console.error("Erro ao perguntar para o GPT");
+        console.error(error);
+        throw error;
+    }
+}
+
+function checkHistory() {
+    return getHistoryChat();
+}
 
 async function insertTechnicalInfo(){
     try {
@@ -13,7 +29,7 @@ async function insertTechnicalInfo(){
         }
         
         for (var i = 0; i < chunks.length; i++) {
-            include("tec-" + i,vectors[i],"tecnico",chunks[i]);
+            await include("tec-" + i,vectors[i],"tecnico",chunks[i]);
         }
     } catch (error) {
         console.error("Erro ao subir as informações técnicas");
@@ -36,4 +52,4 @@ function importContent() {
     }
 }
 
-module.exports = { insertTechnicalInfo,resetTechnicalInfo };
+module.exports = { askGPT, checkHistory };
