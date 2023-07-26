@@ -13,7 +13,7 @@ pinecone.init({
 async function include(id, vector, namespace, metadata) {
     const index = await pinecone.Index("arielapp");
 
-    const upsert_response = await index.upsert({
+    await index.upsert({
         upsertRequest: {
             vectors: [
                 {
@@ -36,4 +36,24 @@ async function deleteNamespace(namespace) {
     });
 }
 
-module.exports = { include, deleteNamespace };
+async function searchBySimilarity(questionVector) {
+    const index = await pinecone.Index("arielapp");
+    var content = "";
+
+    const queryResponse = await index.query({
+        queryRequest: {
+            topK: 2,
+            vector: questionVector,
+            namespace: 'tecnico',
+            includeMetadata: true
+        }
+    });
+
+    for (const match of queryResponse.matches) {
+        content += match.metadata.content;
+    }
+
+    return "'''" + content + "'''";
+}
+
+module.exports = { include, deleteNamespace, searchBySimilarity };
