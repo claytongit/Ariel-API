@@ -42,7 +42,7 @@ async function searchBySimilarity(questionVector) {
 
     const queryResponse = await index.query({
         queryRequest: {
-            topK: 2,
+            topK: 3,
             vector: questionVector,
             namespace: 'tecnico',
             includeMetadata: true
