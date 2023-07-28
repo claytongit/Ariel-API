@@ -9,9 +9,21 @@ const configuration = new Configuration({
 });
 
 const openai = new OpenAIApi(configuration);
-const masterPrompt = "You are a Brazilian salesman working with telesales selling products to people via Whatsapp. You are having a conversation with a person and this person just asked you a question. You need to answer the question in portuguese and naturally. You must answer the question using the information below and the conversation history. The information is in portuguese and in between 3 single quotes.\n\nInformation: ";
+const masterPrompt = `Prompt:
+Read the context and folow the instructions below. Before sending the answer, check if the answer follows every single instruction and is inside the context.
 
-var currentTokenSize = 0;
+Context:
+- You are a Brazilian salesman working with telesales selling products to people via Whatsapp. You are having a conversation with a customer and this customer just asked you a question. You also received some technical information to help you answer the question. All the data provided is in Portuguese.
+
+Instructions:
+- Answer the question in portuguese
+- The answer must be based in the information given to you
+- Answer naturally
+- Use the technical information as basis to answer the question
+
+Information:
+`;
+
 var historyChat = [
     {
         "role": "system", 
@@ -19,7 +31,7 @@ var historyChat = [
     }
 ];
 
-async function getChatCompletion(question, technicalInfo) {
+async function getChatCompletion(question, technicalInfo, historyChatRedis) {
     try {
         historyChat.push({"role": "user", "content": question});
         historyChat[0].content += technicalInfo;
@@ -29,13 +41,13 @@ async function getChatCompletion(question, technicalInfo) {
             messages: historyChat
         });
         
-        const answer = completion.data.choices[0].message;
-        currentTokenSize = completion.data.usage.total_tokens;
+        let answer = completion.data.choices[0].message;
+        let currentTokenSize = completion.data.usage.total_tokens;
 
         historyChat.push(answer);
         historyChat[0].content = masterPrompt;
         
-        return answer;
+        return { answer, currentTokenSize, historyChat };
     } catch (error) {
         throw error;
     }
@@ -44,20 +56,7 @@ async function getChatCompletion(question, technicalInfo) {
 function getHistoryChat() {
     return historyChat;
 }
-/*
-function checkHistorySize() {
-    if (currentTokenSize >= 8092) {
-        let content = "";
 
-        for (var i = 1; i < historyArray.length; i++) {
-            content += historyArray[i].content + "\n";
-        }
-        // Transforma o conteúdo do array de JSON em vetores
-        // e envia os vetores para o Pinecone
-        historyChat = [historyChat[0]];
-    }
-}
-*/
 async function textToVector(text) {
     const resp = await openai.createEmbedding({
         model: 'text-embedding-ada-002',
