@@ -8,13 +8,20 @@ const { include, deleteNamespace, searchBySimilarity } = require("./pinecone");
 async function askGPT(question) {
     try {
         //let historyChatRedis = await client.get('arielKey');
+        let historyChatRedis = "";
+        //historyChatRedis.push({"role": "user", "content": question});
+
         let questionVector = await textToVector(question);
         let technicalInfo = await searchBySimilarity(questionVector);
         let result = await getChatCompletion(question, technicalInfo, historyChatRedis);
 
+        //historyChatRedis.push(result.answer);
+
         if (result.currentTokenSize >= 16384) {
-            restartHistory(result.historyChat);
+            await restartHistory(result.historyChat);
         }
+
+        //client.set(`arielKey`, key);
 
         return result.answer;
     } catch (error) {
@@ -25,10 +32,12 @@ async function askGPT(question) {
 }
 
 function checkHistory() {
+    //const value = await client.get('arielKey');
+
     return getHistoryChat();
 }
 
-function restartHistory(historyChatRedis) {
+async function restartHistory(historyChatRedis) {
     let content = "";
     var i = 1;
 
@@ -48,8 +57,6 @@ function restartHistory(historyChatRedis) {
         let vector = await textToVector(content);
         await include(content.substring(0, 8) + i,vector,"user",content);
     }
-
-    //client.set(`arielKey`, key);
 }
 
 async function insertTechnicalInfo(){
