@@ -2,7 +2,7 @@ const express = require("express");
 const cors    = require("cors");
 const bodyParser = require("body-parser");
 const { askGPT } = require("./resources/auxiliar");
-const { historyRedis } = require('./resources/redis');
+const { getHistoryChat } = require('./resources/redis');
 
 const app = express();
 
@@ -17,18 +17,26 @@ app.post("/openai/prompt", async (req, res) => {
     const { prompt, userId } = req.body;
 
     try {
+        if (prompt == "") {
+            return res.status(400).json({ error: "Bad Request", content: "Prompt vazio" }); 
+        }
+
+        if (userId == "") {
+            return res.status(400).json({ error: "Bad Request", content: "ID vazio" }); 
+        }
+
         const answer = await askGPT(prompt, userId);
 
         return res.status(200).json(answer);
     } catch (error) {
-        return res.status(500).json({ error: "Erro ao chamar a API do OpenAI", content: error }); 
+        return res.status(500).json({ error: "Internal Server Error", content: "Erro ao chamar a API da OpenAI" }); 
     }
 });
 
 app.get("/chat/history/:key", async (req, res) => {
     const { key } = req.params;
 
-    const historyChatRedis   = await historyRedis(key);
+    const historyChatRedis   = await getHistoryChat(key);
     const contentHistoryJson = JSON.parse(historyChatRedis);
 
     return res.status(201).json(contentHistoryJson);

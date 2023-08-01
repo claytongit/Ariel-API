@@ -1,6 +1,6 @@
 const redis = require("redis");
 
-async function historyRedis(key) {
+async function getHistoryChat(key) {
     const client = redis.createClient({
         url: process.env.REDIS_URL,
     });
@@ -9,24 +9,20 @@ async function historyRedis(key) {
 
     const history = await client.get(`history:${ key }`);
 
-    if (history == null) {
-        return false;
-    }
-
     return history;
 }
 
-function setHistoryRedis(userId, historyChatRedis) {
+function setHistoryChat(userId, historyChat) {
     const client = redis.createClient({
         url: process.env.REDIS_URL,
     });
 
     client.connect();
 
-    client.set(`history:${ userId }`, JSON.stringify(historyChatRedis)); 
+    client.set(`history:${ userId }`, JSON.stringify(historyChat)); 
 }
 
 module.exports = {
-    historyRedis,
-    setHistoryRedis,
+    getHistoryChat,
+    setHistoryChat,
 };

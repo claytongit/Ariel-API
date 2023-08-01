@@ -1,44 +1,37 @@
 const fs    = require('fs');
-const { getChatCompletion, textToVector, getHistoryChat } = require("./openai");
+const { getChatCompletion, textToVector } = require("./openai");
 const { include, deleteNamespace, searchBySimilarity } = require("./pinecone");
-const { setHistoryRedis, historyRedis } = require('./redis');
+const { setHistoryChat, getHistoryChat } = require('./redis');
 
 async function askGPT(question, userId) {
     try {
-
-        const getHistoryRedis = await historyRedis(userId);
+        const getHistoryRedis = await getHistoryChat(userId);
         let historyChatRedis  = [];
 
-        if ( getHistoryRedis !== false ) {
+        if ( getHistoryRedis !== null ) {
             historyChatRedis = JSON.parse(getHistoryRedis);
         }
 
         historyChatRedis.push({"role": "user", "content": question});
 
-        let questionVector = await textToVector(question);
-        let technicalInfo  = await searchBySimilarity(questionVector);
-        let result         = await getChatCompletion(question, technicalInfo, historyChatRedis);
+        const questionVector = await textToVector(question);
+        const technicalInfo  = await searchBySimilarity(questionVector);
+        const result         = await getChatCompletion(question, technicalInfo, historyChatRedis);
 
         historyChatRedis.push(result.answer);
 
         if (result.currentTokenSize >= 16384) {
-            await restartHistory(result.historyChat);
+            await restartHistory(historyChatRedis);
+            historyChatRedis = [];
         }
 
-        setHistoryRedis(userId, historyChatRedis);
+        setHistoryChat(userId, historyChatRedis);
 
         return result.answer;
     } catch (error) {
-        console.error("Erro ao perguntar para o GPT");
         console.error(error);
         throw error;
     }
-}
-
-function checkHistory() {
-    //const value = await = await historyRedis();
-
-    return getHistoryChat();
 }
 
 async function restartHistory(historyChatRedis) {

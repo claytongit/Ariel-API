@@ -23,38 +23,28 @@ Instructions:
 Technical Information:
 `;
 
-var historyChat = [
-    {
-        "role": "system", 
-        "content": masterPrompt
-    }
-];
+let system = [];
 
 async function getChatCompletion(question, technicalInfo, historyChatRedis) {
     try {
-        historyChat.push({"role": "user", "content": question});
-        historyChat[0].content += technicalInfo;
+        historyChatRedis.unshift({
+            "role": "system", 
+            "content": (masterPrompt + technicalInfo)
+        });
 
         const completion = await openai.createChatCompletion({
             model: "gpt-3.5-turbo-16k",
             temperature: 0.7,
-            messages: historyChat
+            messages: historyChatRedis
         });
         
         let answer = completion.data.choices[0].message;
         let currentTokenSize = completion.data.usage.total_tokens;
-
-        historyChat.push(answer);
-        historyChat[0].content = masterPrompt;
         
-        return { answer, currentTokenSize, historyChat };
+        return { answer, currentTokenSize };
     } catch (error) {
         throw error;
     }
-}
-
-function getHistoryChat() {
-    return historyChat;
 }
 
 async function textToVector(text) {
@@ -66,4 +56,4 @@ async function textToVector(text) {
     return resp.data.data[0].embedding;
 }
 
-module.exports = { getChatCompletion, textToVector, getHistoryChat };
+module.exports = { getChatCompletion, textToVector };
