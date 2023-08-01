@@ -1,16 +1,14 @@
-const express              = require("express");
-const dotenv               = require("dotenv");
-const bodyParser           = require("body-parser");
-//const client               = require("./resources/redis");
-const getChatCompletion    = require("./resources/openai");
-const insertTechnicalInfo  = require("./resources/auxiliar");
-
-dotenv.config();
+const express    = require("express");
+const bodyParser = require("body-parser");
+const { askGPT, checkHistory } = require("./resources/auxiliar");
 
 const app = express();
 
 app.use(express.json());
 app.use(bodyParser.json());
+app.use(bodyParser.urlencoded({
+  extended: true
+}));
 /*
 app.post("/redis/users", (req, res) => {
     const { key } = req.body;
@@ -27,39 +25,19 @@ app.get("/redis/users", async (req, res) => {
 });
 */
 app.post("/openai/prompt", async (req, res) => {
-    const { prompt } = req.body;
+    const prompt = req.body.prompt;
     try {
-        const completion = await getChatCompletion(prompt);
+        const answer = await askGPT(prompt);
 
-        // checkHistorySize();
-
-        return res.status(200).json({ completion });
+        return res.status(200).json(answer);
     } catch (error) {
-        return res.status(500).json({ error: "Erro ao chamar a API do OpenAI" });
+        return res.status(500).json({ error: "Erro ao chamar a API do OpenAI", content: error });
     }
 });
 
-app.get("/upload-tecnico", async (req, res) => {
-    try {
-        await insertTechnicalInfo();
-
-        return res.status(200).json({ "message": "Success" });
-    } catch (error) {
-        return res.status(500).json({ error: "Erro ao chamar a API do OpenAI" });
-    }
+app.get("/chat/history", async (req, res) => {
+    return res.status(200).json({ content: checkHistory() });
 });
-
-app.get("/reset-tecnico", async (req, res) => {
-    try {
-        await resetTechnicalInfo();
-
-        return res.status(200).json({ "message": "Success" });
-    } catch (error) {
-        return res.status(500).json({ error: "Erro ao chamar a API do OpenAI" });
-    }
-});
-
-//client.connect();
 
 app.listen(5000, async () => {
     console.log('SERVIDOR RODANDO PORTA 5000');
