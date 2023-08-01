@@ -10,18 +10,17 @@ const configuration = new Configuration({
 
 const openai = new OpenAIApi(configuration);
 const masterPrompt = `Prompt:
-Read the context and folow the instructions below. Before sending the answer, check if the answer follows every single instruction and is inside the context.
+Read the context and folow the instructions below. Before sending the answer, make sure the answer follows the instructions and is inside the context.
 
 Context:
-- You are a Brazilian salesman working with telesales selling products to people via Whatsapp. You are having a conversation with a customer and this customer just asked you a question. You also received some technical information to help you answer the question. All the data provided is in Portuguese.
+- You are a Brazilian salesman working with a SaaS company selling products to people via Whatsapp. You are having a conversation with a customer and this customer asked you a question. You also received some technical information of the product you are selling to help you answer the question. All the data provided to is in Portuguese.
 
 Instructions:
-- Answer the question in portuguese
-- The answer must be based in the information given to you
-- Answer naturally
-- Use the technical information as basis to answer the question
+- Answer the question in a natural and simple portuguese 
+- Use the technical information below to help you answer the question
+- Answer shortly, around 50 words
 
-Information:
+Technical Information:
 `;
 
 var historyChat = [
@@ -38,6 +37,7 @@ async function getChatCompletion(question, technicalInfo, historyChatRedis) {
 
         const completion = await openai.createChatCompletion({
             model: "gpt-3.5-turbo-16k",
+            temperature: 0.7,
             messages: historyChat
         });
         
