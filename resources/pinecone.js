@@ -51,6 +51,8 @@ async function searchBySimilarity(questionVector) {
 
     for (const match of queryResponse.matches) {
         content += match.metadata.content;
+        console.log(match.score);
+        console.log(match.metadata.content);
     }
 
     return "'''" + content + "'''";
