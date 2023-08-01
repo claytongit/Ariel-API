@@ -1,16 +1,32 @@
 const redis = require("redis");
 
-try {
+async function historyRedis(key) {
     const client = redis.createClient({
         url: process.env.REDIS_URL,
     });
 
-    client.on("connect", () => {
-        console.log("Conexão com o Redis estabelecida com sucesso!");
-    });
-} catch (error) {
-    console.log("Erro ao estabelecer conexão com o Redis");
-    throw error;
+    client.connect();
+
+    const history = await client.get(`history:${ key }`);
+
+    if (history == null) {
+        return false;
+    }
+
+    return history;
 }
 
-module.exports = client;
+function setHistoryRedis(userId, historyChatRedis) {
+    const client = redis.createClient({
+        url: process.env.REDIS_URL,
+    });
+
+    client.connect();
+
+    client.set(`history:${ userId }`, JSON.stringify(historyChatRedis)); 
+}
+
+module.exports = {
+    historyRedis,
+    setHistoryRedis,
+};

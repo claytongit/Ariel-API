@@ -1,42 +1,37 @@
-const express    = require("express");
+const express = require("express");
+const cors    = require("cors");
 const bodyParser = require("body-parser");
-const { askGPT, checkHistory } = require("./resources/auxiliar");
+const { askGPT } = require("./resources/auxiliar");
+const { historyRedis } = require('./resources/redis');
 
 const app = express();
 
+app.use(cors());
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({
   extended: true
 }));
-/*
-app.post("/redis/users", (req, res) => {
-    const { key } = req.body;
 
-    client.set(`arielKey`, key);
-
-    return res.status(201).json({ "message": "Save" });
-});
-
-app.get("/redis/users", async (req, res) => {
-    const value = await client.get('arielKey');
-
-    return res.status(200).json(value);
-});
-*/
 app.post("/openai/prompt", async (req, res) => {
-    const prompt = req.body.prompt;
+    const { prompt, userId } = req.body;
+
     try {
-        const answer = await askGPT(prompt);
+        const answer = await askGPT(prompt, userId);
 
         return res.status(200).json(answer);
     } catch (error) {
-        return res.status(500).json({ error: "Erro ao chamar a API do OpenAI", content: error });
+        return res.status(500).json({ error: "Erro ao chamar a API do OpenAI", content: error }); 
     }
 });
 
-app.get("/chat/history", async (req, res) => {
-    return res.status(200).json({ content: checkHistory() });
+app.get("/chat/history/:key", async (req, res) => {
+    const { key } = req.params;
+
+    const historyChatRedis   = await historyRedis(key);
+    const contentHistoryJson = JSON.parse(historyChatRedis);
+
+    return res.status(201).json(contentHistoryJson);
 });
 
 app.listen(5000, async () => {

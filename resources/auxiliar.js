@@ -1,27 +1,31 @@
-const fs = require('fs');
-//const client = require("./redis");
+const fs    = require('fs');
 const { getChatCompletion, textToVector, getHistoryChat } = require("./openai");
 const { include, deleteNamespace, searchBySimilarity } = require("./pinecone");
+const { setHistoryRedis, historyRedis } = require('./redis');
 
-//client.connect();
-
-async function askGPT(question) {
+async function askGPT(question, userId) {
     try {
-        //let historyChatRedis = await client.get('arielKey');
-        let historyChatRedis = "";
-        //historyChatRedis.push({"role": "user", "content": question});
+
+        const getHistoryRedis = await historyRedis(userId);
+        let historyChatRedis  = [];
+
+        if ( getHistoryRedis !== false ) {
+            historyChatRedis = JSON.parse(getHistoryRedis);
+        }
+
+        historyChatRedis.push({"role": "user", "content": question});
 
         let questionVector = await textToVector(question);
-        let technicalInfo = await searchBySimilarity(questionVector);
-        let result = await getChatCompletion(question, technicalInfo, historyChatRedis);
+        let technicalInfo  = await searchBySimilarity(questionVector);
+        let result         = await getChatCompletion(question, technicalInfo, historyChatRedis);
 
-        //historyChatRedis.push(result.answer);
+        historyChatRedis.push(result.answer);
 
         if (result.currentTokenSize >= 16384) {
             await restartHistory(result.historyChat);
         }
 
-        //client.set(`arielKey`, key);
+        setHistoryRedis(userId, historyChatRedis);
 
         return result.answer;
     } catch (error) {
@@ -32,7 +36,7 @@ async function askGPT(question) {
 }
 
 function checkHistory() {
-    //const value = await client.get('arielKey');
+    //const value = await = await historyRedis();
 
     return getHistoryChat();
 }
